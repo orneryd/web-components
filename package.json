@@ -1,0 +1,29 @@
+{
+  "name": "@ornery/web-components",
+  "version": "1.0.0",
+  "description": "WebComponents html loader and optional runtime mixins to enable creation of custom HTML elements using es6 template literal syntax in *.html files.",
+  "main": "index.js",
+  "scripts": {
+    "docs": "jsdoc2md src/loaders/*.js src/*.js > README.md"
+  },
+  "author": "timothyswt@gmail.com",
+  "license": "MIT",
+  "dependencies": {
+    "es6-templates": "^0.2.3",
+    "fastparse": "^1.1.1",
+    "html-minifier": "^3.5.8",
+    "html-webpack-plugin": "^3.2.0",
+    "loader-utils": "^1.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-babel": "^9.0.0",
+    "eslint-config-google": "^0.13.0",
+    "eslint-plugin-jsdoc": "^15.8.0",
+    "jsdoc": "^3.6.3",
+    "jsdoc-to-markdown": "^5.0.0"
+  },
+  "peerDependencies": {
+    "node-sass": "^4.13.1"
+  }
+}

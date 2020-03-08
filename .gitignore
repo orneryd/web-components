@@ -1,0 +1,129 @@
+# possible security issues
+**/.ssh/
+**/*.jks
+**/*.keystore
+**/id_rsa
+**/id_dsa
+**/id_ecdsa
+**/*.key
+**/.key*
+google-services.json
+
+# Intellij Idea local configuration files
+*.iml
+*.ipr
+*.iws
+**/*.iml
+.idea/
+.idea_modules/
+atlassian-ide-plugin.xml
+com_crashlytics_export_strings.xml
+crashlytics.properties
+crashlytics-build.properties
+fabric.properties
+
+# Eclipse project files
+proguard/
+.externalToolBuilders/
+.settings/
+.metadata
+*.launch
+*.pydevproject
+.classpath
+.project
+.loadpath
+.recommenders
+.cproject
+.autotools
+.buildpath
+.springBeans
+local.properties
+
+# Visual Studio project files
+.vscode
+
+# APT temporary data
+.apt_generated/
+.factorypath
+.apt_generated
+
+# common temporary files
+tmp/
+**/._*
+**/*.tmp
+**/*.bak
+**/*.swp
+**/*~.nib
+
+# Common Binaries that should not be included in git repos (Note, may remove image files in limited cases until content repos available)
+**/*.jar
+**/*.war
+**/*.nar
+**/*.ear
+**/*.zip
+**/*.tar.gz
+**/*.tgz
+**/*.tbz
+**/*.rar
+**/*.docx
+**/*.xlsx
+**/*.png
+
+#build tool binaries and artifacts
+gradle
+gradle-app.setting
+.gradle
+
+# Common build outputs
+build/
+out/
+bin/
+gen/
+cmake-build-*/
+grunt/
+
+# Mac resource stream data
+.DS_Store
+
+# Node.js items
+node_modules/
+jspm_packages/
+typings/
+.npm/
+.eslintcache
+.pnp
+.pnp.js
+.env.local
+.env.test.local
+.env.development.local
+.env.production.local
+.next
+.nuxt
+
+# coverage output
+/coverage
+
+# npm/yarn logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# General Java files (should not appear in most repos)
+*.class
+hs_err_pid*
+
+# Temporary testing logs
+*.log
+*.ctxt
+
+# Mobile development
+.mtj.tmp/
+.navigation/
+captures/
+**/*.apk
+**/*.ap_
+**/*.aab
+**/*.dex
+
+# XCode files
+xcuserdata/

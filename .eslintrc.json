@@ -1,0 +1,45 @@
+{
+  "extends": [
+    "eslint:recommended",
+    "google"
+  ],
+  "plugins": [
+    "jsdoc"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2018,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "spread": true
+    }
+  },
+  "rules": {
+    "semi": "warn",
+    "new-cap": "off",
+    "max-len": [
+      "warn",
+      {
+        "code": 120
+      }
+    ],
+    "no-invalid-this": "off",
+    "require-jsdoc": [
+      "off",
+      {
+        "require": {
+          "FunctionDeclaration": true,
+          "MethodDefinition": false,
+          "ClassDeclaration": false,
+          "ArrowFunctionExpression": false,
+          "FunctionExpression": false
+        }
+      }
+    ]
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "es6": true,
+    "jest": true
+  }
+}
