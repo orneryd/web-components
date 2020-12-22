@@ -36,29 +36,54 @@ if (typeof HTMLElement === "undefined") {
  * <i18n-message>I have a grey monkey</i18n-message>
  */
 class I18nMessage extends HTMLElement {
-    constructor(self) {
-        self = super(self);
-        this.attachShadow({ mode: "open" });
-        return self;
+    constructor() {
+       super();
     }
 
+    static get observedAttributes() {
+        return ['key', 'id', 'data-values']
+    }
+
+    get useShadow() {
+        if (this.hasAttribute('shadow')) {
+            let current = this.getAttribute('shadow')
+            if (current === 'false') {
+                return false
+            }
+        }
+        return true
+    }
+    
     get translate() {
-        return (
-            this.innerHTML || this.getAttribute("key") || this.getAttribute("id")
-        );
+        if (this.useShadow) {
+            return (
+                this.innerHTML || this.getAttribute("key") || this.getAttribute("id")
+            );  
+        } else {
+            return (
+                this.getAttribute("key") || this.getAttribute("id")
+            );
+        }
+        
     }
-
+    
+    attributeChangedCallback() {
+        this.update();
+    }
+    
     update() {
+        const root = this.shadowRoot || this;
         const context = { ...this.getAttribute("data-values"), ...this.dataset };
-        this.shadowRoot.innerHTML = I18n.get(this.translate, context);
+        root.innerHTML = I18n.get(this.translate, context);
     }
 
     connectedCallback() {
+        if (this.useShadow && !this.shadowRoot) this.attachShadow({ mode: 'open' })
         DataManager.subscribeTo("i18n-messages", () => {
             this.update();
         });
         const attrObserver = new MutationObserver(() => this.update());
-        attrObserver.observe(this, { attributes: true, childList: true });
+        attrObserver.observe(this, { attributes: true, childList: this.useShadow });
     }
 }
 
@@ -227,7 +252,7 @@ const I18n = new (class {
             string = template(string, data);
         }
         // type coercion desired in this case for string = undefined possibility
-        return string;
+        return string || key;
     }
 
     /**
