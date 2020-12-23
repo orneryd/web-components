@@ -20,7 +20,7 @@
 
 const thisRegex = /^[this|props]\./gi;
 const nestedES6 = /\$\{.*(\$\{(.+?)\}).*\}/g;
-const es6Regex = /\$\{(.+)\}/g;
+const es6Regex = /\$\{(.+?)\}/g;
 /**
   * @param {String} expr The es6 expression
   * @param {Options|Object} context the context object to find values for tokens.
