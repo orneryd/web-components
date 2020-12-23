@@ -1,5 +1,5 @@
 const DataManager = require("./data-manager");
-const { template } = require("./utils");
+const { template, getFromObj } = require("./utils");
 const withContext = require("./context-binding");
 
 if (typeof HTMLElement === "undefined") {
@@ -245,14 +245,9 @@ const I18n = new (class {
      * };
      * console.log(I18n.get('tokenized.message', stringTestData)) // "I have a grey monkey"
      */
-    get(key, data) {
-        const strings = this.getMessages()[this.getLang()];
-        let string = strings && strings[key];
-        if (data) {
-            string = template(string, data);
-        }
-        // type coercion desired in this case for string = undefined possibility
-        return string || key;
+    get(key, data= {}) {
+        const context = {...this.getMessages()[this.getLang()], ...data};
+        return template(context[key] || key, context);
     }
 
     /**

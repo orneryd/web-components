@@ -14,33 +14,13 @@
   *
   * result == 'bar';
   */
-const getFromObj = (path, obj = {}) => {
-  return path && path.split('.').reduce((res, key) => res[key] != null ? res[key] : path, obj);
+ const getFromObj = (path, obj = {}) => {
+  return path && (obj[path] || path.split('.').reduce((res, key) => res[key] != null ? res[key] : path, obj));
 };
 
-/**
-  * @param {String} tmpl the string template
-  * @param {Object} map Key/Value pairs to process the string against
-  * @param {String} fallback they string fallback when the value is missing.
-  * @return {*|String} whatever the value from the nested key path is or the default string '${path}'.
-  * @description Processes a string formatted like an ES6 template against an object
-  *
-  * @example
-  * let result = template('I am a string literal formatted ${message.label}.', {
-  *  message: {
-  *    label: 'to look like an ES6 template'
-  *  }
-  * });
-  *
-  * result == 'I am a string literal formatted to look like an ES6 template.';
-  */
-const template = (tmpl, map, fallback) => {
-  const context = Object.assign({this: map}, map);
-  return getFromObj(stripES6(tmpl, context), context);
-};
-
-const thisRegex = /^this\./;
-const es6Regex = /\$\{.+?}/g;
+const thisRegex = /^[this|props]\./gi;
+const nestedES6 = /\$\{.*(\$\{(.+?)\}).*\}/g;
+const es6Regex = /\$\{(.+)\}/g;
 /**
   * @param {String} expr The es6 expression
   * @param {Options|Object} context the context object to find values for tokens.
@@ -48,11 +28,35 @@ const es6Regex = /\$\{.+?}/g;
   * @description removes the ${} wrapping from an es6 template literal expression.
   */
 const stripES6 = function(expr, context) {
-  return expr && expr.replace(es6Regex, (match) => {
-    return getFromObj(match.substr(2, match.length - 3).trim(), context);
-  }).replace(thisRegex, '');
+    es6Regex.lastIndex = 0;
+    nestedES6.lastIndex = 0;
+    let result = expr.replace(thisRegex, '');
+    let matchArr;
+    while (matchArr = nestedES6.exec(result)) {
+        let [wholeMatch, outerMatch, key] = matchArr;
+        const replacement = getFromObj(key, context);
+        result = stripES6(result.replace(outerMatch, replacement).trim(), context);
+    }
+    return result.replace(es6Regex, (match, $1)=> getFromObj($1, context));
 };
 
+/**
+ * @param {String} tmpl the string template
+ * @param {Object} map Key/Value pairs to process the string against
+ * @param {String} fallback they string fallback when the value is missing.
+ * @return {*|String} whatever the value from the nested key path is or the default string '${path}'.
+ * @description Processes a string formatted like an ES6 template against an object
+ *
+ * @example
+ * let result = template('I am a string literal formatted ${message.label}.', {
+ *  message: {
+ *    label: 'to look like an ES6 template'
+ *  }
+ * });
+ *
+ * result == 'I am a string literal formatted to look like an ES6 template.';
+ */
+const template = stripES6;
 
 /**
  * @function arrayParser
