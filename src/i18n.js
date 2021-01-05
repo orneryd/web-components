@@ -152,7 +152,7 @@ const I18n = new (class {
      * console.log(I18n.getLang()) // "en-US"
      */
     getLang() {
-        return this._lang;
+        return this._lang.toLowerCase();
     }
     /**
      * @memberof I18n
@@ -165,8 +165,8 @@ const I18n = new (class {
      * I18n.setLang('en-US')
      * console.log(I18n.getLang()) //'en-US'
      */
-    setLang(lang) {
-        this._lang = lang;
+    setLang(lang= "") {
+        this._lang = lang.toLowerCase();
     }
     /**
      * @memberof I18n
@@ -209,11 +209,12 @@ const I18n = new (class {
      *   'tokenized.message': "I have a ${color} ${animal}"
      * });
      */
-    addMessages(lang, strings) {
+    addMessages(lang = "", strings) {
+        lang = lang.toLowerCase();
         const existing = this.getMessages();
         const altLang = lang.split(/[_-]/i)[0];
         const addedMessages = { 
-            ...existing[altLang], 
+            ...existing[altLang],
             ...existing[lang], 
             ...strings 
         };
