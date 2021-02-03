@@ -37,40 +37,37 @@ if (typeof HTMLElement === "undefined") {
  */
 class I18nMessage extends HTMLElement {
     constructor() {
-       super();
+        super();
     }
 
     static get observedAttributes() {
-        return ['key', 'id', 'data-values']
+        return ["key", "id", "data-values"];
     }
 
     get useShadow() {
-        if (this.hasAttribute('shadow')) {
-            let current = this.getAttribute('shadow')
-            if (current === 'false') {
-                return false
+        if (this.hasAttribute("shadow")) {
+            let current = this.getAttribute("shadow");
+            if (current === "false") {
+                return false;
             }
         }
-        return true
+        return true;
     }
-    
+
     get translate() {
         if (this.useShadow) {
             return (
                 this.innerHTML || this.getAttribute("key") || this.getAttribute("id")
-            );  
-        } else {
-            return (
-                this.getAttribute("key") || this.getAttribute("id")
             );
+        } else {
+            return this.getAttribute("key") || this.getAttribute("id");
         }
-        
     }
-    
+
     attributeChangedCallback() {
         this.update();
     }
-    
+
     update() {
         const root = this.shadowRoot || this;
         const context = { ...this.getAttribute("data-values"), ...this.dataset };
@@ -78,12 +75,19 @@ class I18nMessage extends HTMLElement {
     }
 
     connectedCallback() {
-        if (this.useShadow && !this.shadowRoot) this.attachShadow({ mode: 'open' })
-        DataManager.subscribeTo("i18n-messages", () => {
+        if (this.useShadow && !this.shadowRoot) this.attachShadow({ mode: "open" });
+        this._i18nListener = DataManager.subscribe((newVals) => {
             this.update();
         });
         const attrObserver = new MutationObserver(() => this.update());
         attrObserver.observe(this, { attributes: true, childList: this.useShadow });
+    }
+
+    disconnectedCallback() {
+        if (this._i18nListener) {
+            this._i18nListener.destroy();
+            this._i18nListener = null;
+        }
     }
 }
 
@@ -119,10 +123,13 @@ class I18nMessage extends HTMLElement {
  */
 const I18n = new (class {
     constructor() {
-        let defaultLang = "en-US";
+        // language without region code;
+        this._altLangRegex = /[_-]/i;
+        this.setDefaultLang();
+        this.setLang();
         if (typeof window !== "undefined") {
             if (typeof navigator !== "undefined") {
-                defaultLang = navigator.language;
+                this.setLang(navigator.language);
             }
             if (
                 typeof customElements !== "undefined" &&
@@ -133,13 +140,22 @@ const I18n = new (class {
             this.setMessages(window.i18n || {});
         } else {
             if (typeof process !== "undefined") {
-                const {env} = process;
-                defaultLang = env.LANG || env.LANGUAGE || env.LC_ALL || env.LC_MESSAGES || defaultLang;
+                const { env } = process;
+                this.setLang(
+                    env.LANG ||
+                    env.LANGUAGE ||
+                    env.LC_ALL ||
+                    env.LC_MESSAGES ||
+                    this._defaultLang
+                );
             }
         }
-        this.setLang(defaultLang); // language without region code;
     }
 
+    setDefaultLang(lang = "en-us") {
+        this._defaultLang = lang.toLowerCase();
+        this._fallbackMessages = this.getMessages(this._defaultLang);
+    }
     /**
      * @memberof I18n
      * @return {String} lang
@@ -152,7 +168,10 @@ const I18n = new (class {
      * console.log(I18n.getLang()) // "en-US"
      */
     getLang() {
-        return this._lang.toLowerCase();
+        return DataManager.get("i18n-language") || '';
+    }
+    getRootLang() {
+        return this._rootLang;
     }
     /**
      * @memberof I18n
@@ -166,15 +185,27 @@ const I18n = new (class {
      * console.log(I18n.getLang()) //'en-US'
      */
     setLang(lang= "") {
-        this._lang = lang.toLowerCase();
+        return DataManager.set("i18n-language", lang)
     }
     /**
      * @memberof I18n
      * @return {String} lang
      * @description returns the current i18n messages set in the DataManager
      */
-    getMessages() {
-        return DataManager.get("i18n-messages") || {};
+    getMessages(lang) {
+        const allMessages = DataManager.get("i18n-messages") || {};
+        if (lang === "all") {
+            return allMessages;
+        } else {
+            lang = lang || this.getLang();
+            const rootLang = lang
+                ? lang.split(this._altLangRegex)[0]
+                : this.getRootLang();
+            return {
+                ...allMessages[rootLang],
+                ...allMessages[lang],
+            };
+        }
     }
     /**
      * @memberof I18n
@@ -193,7 +224,7 @@ const I18n = new (class {
      * })
      */
     setMessages(values) {
-        DataManager.set("i18n-messages", values) || {};
+        return DataManager.set("i18n-messages", values);
     }
     /**
      * @memberof I18n
@@ -209,21 +240,26 @@ const I18n = new (class {
      *   'tokenized.message': "I have a ${color} ${animal}"
      * });
      */
-    addMessages(lang = "", strings) {
+    addMessages(lang, newStrings) {
+        if (typeof lang !== "string") {
+            newStrings = lang;
+            lang = this.getLang();
+        }
         lang = lang.toLowerCase();
-        const existing = this.getMessages();
-        const altLang = lang.split(/[_-]/i)[0];
-        const addedMessages = { 
-            ...existing[altLang],
-            ...existing[lang], 
-            ...strings 
+        const rootLang = lang.split(this._altLangRegex)[0];
+        const existing = this.getMessages("all");
+        existing[rootLang] = {
+            ...(existing[rootLang] || {}),
+            ...newStrings,
         };
-        const newMessages = {
-            ...existing,
-            [altLang]: addedMessages,
-            [lang]: addedMessages
+        existing[lang] = {
+            ...(existing[lang] || {}),
+            ...newStrings,
         };
-        this.setMessages(newMessages);
+        this.setMessages(existing);
+        if (lang === this._defaultLang) {
+            this._fallbackMessages = this.getMessages(lang);
+        }
     }
 
     /**
@@ -246,9 +282,13 @@ const I18n = new (class {
      * };
      * console.log(I18n.get('tokenized.message', stringTestData)) // "I have a grey monkey"
      */
-    get(key, data= {}) {
-        const context = {...this.getMessages()[this.getLang()], ...data};
-        return template(context[key] || key, context);
+    get(key, data = {}) {
+        const context = {
+            ...this._fallbackMessages,
+            ...this.getMessages(),
+            ...data,
+        };
+        return template(getFromObj(key, context), context);
     }
 
     /**
@@ -270,16 +310,14 @@ const I18n = new (class {
      */
     getAll(namespace, data) {
         if (namespace) {
-            return Object.entries(this.getMessages()[this.getLang()])
-                .filter(([key, value]) => {
-                    return key.startsWith(namespace) && value;
-                })
-                .reduce((reducer, [key, val]) => {
+            return Object.keys(this.getMessages()).reduce((reducer, [key]) => {
+                if (key.startsWith(namespace)) {
                     reducer[key.replace(namespace + ".", "")] = this.get(key, data);
-                    return reducer;
-                }, {});
+                }
+                return reducer;
+            }, {});
         } else {
-            return this.getMessages()[this.getLang()];
+            return this.getMessages("all");
         }
     }
 })();

@@ -61,7 +61,7 @@ module.exports = (() => {
      * @description call destroy() on the returned object to remove the event listener.
      */
     subscribe(callback) {
-      return callback && this._state.on('set', callback.bind(this));
+      return callback && this._state.on('set', callback);
     }
 
     /**
@@ -86,7 +86,7 @@ module.exports = (() => {
             };
           }
         });
-        updates && callback.call(this, updates, newState, oldState);
+        updates && callback(updates, newState, oldState);
       });
     }
   };
