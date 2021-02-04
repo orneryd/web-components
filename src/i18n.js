@@ -152,7 +152,7 @@ const I18n = new (class {
         }
     }
 
-    setDefaultLang(lang = "en-us") {
+    setDefaultLang(lang = "en") {
         this._defaultLang = lang.toLowerCase();
         this._fallbackMessages = this.getMessages(this._defaultLang);
     }
@@ -171,7 +171,7 @@ const I18n = new (class {
         return DataManager.get("i18n-language") || '';
     }
     getRootLang() {
-        return this._rootLang;
+        return this.getLang().split(this._altLangRegex)[0];
     }
     /**
      * @memberof I18n
@@ -259,6 +259,8 @@ const I18n = new (class {
         this.setMessages(existing);
         if (lang === this._defaultLang) {
             this._fallbackMessages = this.getMessages(lang);
+        } else if (rootLang === this._defaultLang) {
+            this._fallbackMessages = this.getMessages(rootLang);
         }
     }
 
