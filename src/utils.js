@@ -14,9 +14,19 @@
  *
  * result == 'bar';
  */
+const keyRegexp = /^[\w\-]+(\.[\w\-]+)+$/g
 const getFromObj = (path, obj = {}) => {
-  return path && (obj[path] || path.split('.').reduce((res, key) => res[key] != null ? res[key] : path, obj));
+  path = path.trim();
+  if (path != null){
+    if (obj[path] != null) {
+      return obj[path];
+    } else if (keyRegexp.test(path)) {
+      return path.split('.').reduce((res, key) => res[key] != null ? res[key] : path, obj);
+    } 
+  }
+  return path;
 };
+
 
 const thisRegex = /^[this|props]\./gi;
 const nestedES6 = /\$\{.*(\$\{(.+?)\}).*\}/g;
