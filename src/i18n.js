@@ -312,7 +312,7 @@ const I18n = new (class {
      */
     getAll(namespace, data) {
         if (namespace) {
-            return Object.keys(this.getMessages()).reduce((reducer, [key]) => {
+            return Object.keys(this.getMessages()).reduce((reducer, key) => {
                 if (key.startsWith(namespace)) {
                     reducer[key.replace(namespace + ".", "")] = this.get(key, data);
                 }
