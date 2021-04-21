@@ -5,91 +5,6 @@ const withContext = require("./context-binding");
 if (typeof HTMLElement === "undefined") {
     HTMLElement = class {};
 }
-/**
- * @class I18nMessage
- * @description <i18n-message> HTML element. Provides tranlsation and interpolation for
- * translatable strings
- * @param {String} key the key for the strings based on current language. can be set as the innerHTML or
- * defined as the attibutes: key, id, data-key, data-id
- * @param {JSON} values can be passed as data-* attributes or as a json-parseable object string as "data-values"
- * @param {String} dataAttributes
- * @example <caption>Given the following configuration</caption>
- * import { I18n } from '@ornery/web-components';
- * I18n.addMessages('en-US', {
- *  'translatable.message.name': "I'm a translated string from i18n",
- *   'tokenized.message': "I have a ${color} ${animal}"
- * });
- * @example @lang html <caption>With the following usage</caption>
- * <i18n-message>translatable.message.name</i18n-message>
- * <div>
- *    <i18n-message data-values="{'color: 'grey', 'animal': 'monkey'}">tokenized.message</i18n-message>
- *    <i18n-message data-color="grey" data-animal="monkey">tokenized.message</i18n-message>
- *    <i18n-message key="tokenized.message"/>
- *    <!-- React does not pass key or ref props so you can use "data-key" or "data-id" as well-->
- *    <i18n-message data-key="tokenized.message"/>
- *    <i18n-message id="translatable.message.name"/>
- *    <i18n-message data-id="translatable.message.name"/>
- * </div>
- *
- * @example @lang html <caption>Renders the HTML</caption>
- * <i18n-message>I'm a translated string from i18n</i18n-message>
- * <i18n-message>I have a grey monkey</i18n-message>
- */
-class I18nMessage extends HTMLElement {
-    constructor() {
-        super();
-    }
-
-    static get observedAttributes() {
-        return ["key", "id", "data-values"];
-    }
-
-    get useShadow() {
-        if (this.hasAttribute("shadow")) {
-            let current = this.getAttribute("shadow");
-            if (current === "false") {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    get translate() {
-        if (this.useShadow) {
-            return (
-                this.innerHTML || this.getAttribute("key") || this.getAttribute("id")
-            );
-        } else {
-            return this.getAttribute("key") || this.getAttribute("id");
-        }
-    }
-
-    attributeChangedCallback() {
-        this.update();
-    }
-
-    update() {
-        const root = this.shadowRoot || this;
-        const context = { ...this.getAttribute("data-values"), ...this.dataset };
-        root.innerHTML = I18n.get(this.translate, context);
-    }
-
-    connectedCallback() {
-        if (this.useShadow && !this.shadowRoot) this.attachShadow({ mode: "open" });
-        this._i18nListener = DataManager.subscribe((newVals) => {
-            this.update();
-        });
-        const attrObserver = new MutationObserver(() => this.update());
-        attrObserver.observe(this, { attributes: true, childList: this.useShadow });
-    }
-
-    disconnectedCallback() {
-        if (this._i18nListener) {
-            this._i18nListener.destroy();
-            this._i18nListener = null;
-        }
-    }
-}
 
 /**
  *
@@ -130,12 +45,6 @@ const I18n = new (class {
         if (typeof window !== "undefined") {
             if (typeof navigator !== "undefined") {
                 this.setLang(navigator.language);
-            }
-            if (
-                typeof customElements !== "undefined" &&
-                !customElements.get("i18n-message")
-            ) {
-                customElements.define("i18n-message", withContext(I18nMessage));
             }
             this.setMessages(window.i18n || {});
         } else {
@@ -323,6 +232,96 @@ const I18n = new (class {
         }
     }
 })();
+
+/**
+ * @class I18nMessage
+ * @description <i18n-message> HTML element. Provides tranlsation and interpolation for
+ * translatable strings
+ * @param {String} key the key for the strings based on current language. can be set as the innerHTML or
+ * defined as the attibutes: key, id, data-key, data-id
+ * @param {JSON} values can be passed as data-* attributes or as a json-parseable object string as "data-values"
+ * @param {String} dataAttributes
+ * @example <caption>Given the following configuration</caption>
+ * import { I18n } from '@ornery/web-components';
+ * I18n.addMessages('en-US', {
+ *  'translatable.message.name': "I'm a translated string from i18n",
+ *   'tokenized.message': "I have a ${color} ${animal}"
+ * });
+ * @example @lang html <caption>With the following usage</caption>
+ * <i18n-message>translatable.message.name</i18n-message>
+ * <div>
+ *    <i18n-message data-values="{'color: 'grey', 'animal': 'monkey'}">tokenized.message</i18n-message>
+ *    <i18n-message data-color="grey" data-animal="monkey">tokenized.message</i18n-message>
+ *    <i18n-message key="tokenized.message"/>
+ *    <!-- React does not pass key or ref props so you can use "data-key" or "data-id" as well-->
+ *    <i18n-message data-key="tokenized.message"/>
+ *    <i18n-message id="translatable.message.name"/>
+ *    <i18n-message data-id="translatable.message.name"/>
+ * </div>
+ *
+ * @example @lang html <caption>Renders the HTML</caption>
+ * <i18n-message>I'm a translated string from i18n</i18n-message>
+ * <i18n-message>I have a grey monkey</i18n-message>
+ */
+ class I18nMessage extends HTMLElement {
+    constructor() {
+        super();
+    }
+
+    static get observedAttributes() {
+        return ["key", "id", "data-values"];
+    }
+
+    get useShadow() {
+        if (this.hasAttribute("shadow")) {
+            let current = this.getAttribute("shadow");
+            if (current === "false") {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    get translate() {
+        if (this.useShadow) {
+            return (
+                this.innerHTML || this.getAttribute("key") || this.getAttribute("id")
+            );
+        } else {
+            return this.getAttribute("key") || this.getAttribute("id");
+        }
+    }
+
+    attributeChangedCallback() {
+        this.update();
+    }
+
+    update() {
+        const root = this.shadowRoot || this;
+        const context = { ...this.getAttribute("data-values"), ...this.dataset };
+        root.innerHTML = I18n.get(this.translate, context);
+    }
+
+    connectedCallback() {
+        if (this.useShadow && !this.shadowRoot) this.attachShadow({ mode: "open" });
+        this._i18nListener = DataManager.subscribe((newVals) => {
+            this.update();
+        });
+        const attrObserver = new MutationObserver(() => this.update());
+        attrObserver.observe(this, { attributes: true, childList: this.useShadow });
+    }
+
+    disconnectedCallback() {
+        if (this._i18nListener) {
+            this._i18nListener.destroy();
+            this._i18nListener = null;
+        }
+    }
+}
+
+if (typeof window !== "undefined" && typeof customElements !== "undefined" && !customElements.get("i18n-message")) {
+    customElements.define("i18n-message", withContext(I18nMessage));
+}
 
 module.exports = {
     I18n,
