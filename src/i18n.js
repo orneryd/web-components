@@ -283,23 +283,22 @@ const I18n = new (class {
     }
 
     get translate() {
-        if (this.useShadow) {
-            return (
-                this.innerHTML || this.getAttribute("key") || this.getAttribute("id")
-            );
-        } else {
-            return this.getAttribute("key") || this.getAttribute("id");
-        }
+        return this.getAttribute("key") || this.getAttribute("id");
     }
 
-    attributeChangedCallback() {
+    attributeChangedCallback(name) {
         this.update();
     }
-
+    
     update() {
         const root = this.shadowRoot || this;
         const context = { ...this.getAttribute("data-values"), ...this.dataset };
-        root.innerHTML = I18n.get(this.translate, context);
+        const newMesage = I18n.get(this.translate, context);
+        if (!root.innerHTML) {
+            root.innerHTML = newMesage;
+        } else if (newMesage !== this.translate && newMesage !== root.innerHTML) {
+            root.innerHTML = newMesage;
+        }  
     }
 
     connectedCallback() {
