@@ -1,5 +1,5 @@
 const DataManager = require("./data-manager");
-const { template, getFromObj } = require("./utils");
+const { template, getFromObj, shouldEncode, encodeHTML } = require("./utils");
 const withContext = require("./context-binding");
 
 if (typeof HTMLElement === "undefined") {
@@ -293,7 +293,10 @@ const I18n = new (class {
     update() {
         const root = this.shadowRoot || this;
         const context = { ...this.getAttribute("data-values"), ...this.dataset };
-        const newMesage = I18n.get(this.translate, context);
+        let newMesage = I18n.get(this.translate, context);
+        if (shouldEncode(newMesage)) {
+            newMesage = encodeHTML(newMesage);
+        }
         if (!root.innerHTML) {
             root.innerHTML = newMesage;
         } else if (newMesage !== this.translate && newMesage !== root.innerHTML) {

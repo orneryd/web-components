@@ -256,6 +256,17 @@ const dataAttrs = toDataAttrs(stringTestData);
 const toDataAttrs = (obj) => {
   return prefixKeys(obj, 'data-');
 };
+const HTMLEncodable = /[\u00A0-\u9999<>]/g;
+const encodeHTML = (stringVal = "") => stringVal.replace(HTMLEncodable, i => `&#${i.charCodeAt(0)};`)
+
+const withClosing = /<([^>]+?)([^>]*?)>(.*?)<\/\1>/gi;
+const selfClosing = /(<([^>]+)\/>)/ig;
+const shouldEncode = (str) => {
+    return (str || '')
+        .replace(withClosing, '')
+        .replace(selfClosing, '')
+        .trim();
+}
 
 module.exports = {
   getFromObj,
@@ -266,4 +277,6 @@ module.exports = {
   toSearch,
   prefixKeys,
   toDataAttrs,
+  shouldEncode,
+  encodeHTML
 };
