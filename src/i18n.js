@@ -299,7 +299,7 @@ const I18n = new (class {
         }
         if (!root.innerHTML) {
             root.innerHTML = newMesage;
-        } else if (newMesage !== this.translate && newMesage !== root.innerHTML) {
+        } else if (newMesage !== this.translate || newMesage !== root.innerHTML) {
             root.innerHTML = newMesage;
         }  
     }
