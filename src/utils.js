@@ -16,7 +16,7 @@
  */
 const keyRegexp = /^[\w\-]+(\.[\w\-]+)+$/g
 const getFromObj = (path, obj = {}) => {
-  path = path.trim();
+  path = path && path.trim();
   if (path != null){
     if (obj[path] != null) {
       return obj[path];
