@@ -80,8 +80,8 @@ const I18n = new (class {
   getLang() {
     return DataManager.get('i18n-language') || '';
   }
-  getRootLang() {
-    return this.getLang().split(this._altLangRegex)[0];
+  getRootLang(lang) {
+    return (lang || this.getLang()).split(this._altLangRegex)[0];
   }
   /**
    * @memberof I18n
@@ -110,10 +110,9 @@ const I18n = new (class {
       return allMessages;
     } else {
       lang = lang || this.getLang();
-      const rootLang = lang
-        ? lang.split(this._altLangRegex)[0]
-        : this.getRootLang();
+      const rootLang = this.getRootLang(lang);
       return {
+        ...this._fallbackMessages,
         ...allMessages[rootLang],
         ...allMessages[lang],
       };
@@ -137,7 +136,9 @@ const I18n = new (class {
    * })
    */
   setMessages(values) {
-    return DataManager.set('i18n-messages', values);
+    const response = DataManager.set('i18n-messages', values);
+    this.setFallbackMessages();
+    return response;
   }
   /**
    * @memberof I18n
@@ -159,22 +160,28 @@ const I18n = new (class {
       lang = this.getLang();
     }
     lang = lang.toLowerCase();
-    const rootLang = lang.split(this._altLangRegex)[0];
+    const rootLang = this.getRootLang(lang);
     const existing = this.getMessages('all');
-    existing[rootLang] = {
-      ...(existing[rootLang] || {}),
-      ...newStrings,
-    };
     existing[lang] = {
       ...(existing[lang] || {}),
       ...newStrings,
     };
-    this.setMessages(existing);
-    if (lang === this._defaultLang) {
-      this._fallbackMessages = this.getMessages(lang);
-    } else if (rootLang === this._defaultLang) {
-      this._fallbackMessages = this.getMessages(rootLang);
+    if (rootLang !== lang) {
+      existing[rootLang] = {
+        ...(existing[rootLang] || {}),
+        ...newStrings,
+      };
     }
+    this.setMessages(existing);
+    this.setFallbackMessages();
+  }
+
+  setFallbackMessages(){
+    const rootLang = this.getRootLang(this._defaultLang);
+    this._fallbackMessages = {
+      ...this.getMessages(this._defaultLang),
+      ...this.getMessages(rootLang)
+    };
   }
 
   /**
@@ -331,6 +338,7 @@ if (
   typeof customElements !== 'undefined' &&
   !customElements.get('i18n-message')
 ) {
+  window.I18n = I18n;
   customElements.define('i18n-message', withContext(I18nMessage));
 }
 
