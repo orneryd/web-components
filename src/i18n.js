@@ -1,6 +1,5 @@
 const DataManager = require('./data-manager');
-const {template, getFromObj, shouldEncode, encodeHTML} = require('./utils');
-const withContext = require('./context-binding');
+const {template, getFromObj, toLowerMap} = require('./utils');
 
 if (typeof HTMLElement === 'undefined') {
   // eslint-disable-next-line no-global-assign
@@ -11,7 +10,7 @@ if (typeof HTMLElement === 'undefined') {
  *
  * @class I18n
  * @description Import strings here and call I18n.addStrings() with the supported locale identifier
- * and the strings object exported from the language file
+ * and the strings object exported from the locale file
  * By default, it will set the values on window.i18n, if defined when loaded, as the starting messages.
  * This is useful if you wish to server-side render HTML certain content before laoding scripts on the client.
  * @example
@@ -37,84 +36,93 @@ if (typeof HTMLElement === 'undefined') {
  * console.log(I18n.getMessages()) // will log the window.i18n object
  *
  */
-const I18n = new (class {
-  constructor() {
-    // language without region code;
-    this._altLangRegex = /[_-]/i;
-    this.setDefaultLang();
-    this.setLang();
-    if (typeof window !== 'undefined') {
-      if (typeof navigator !== 'undefined') {
-        this.setLang(navigator.language);
-      }
-      this.setMessages(window.i18n || {});
-    } else {
-      if (typeof process !== 'undefined') {
-        const {env} = process;
-        this.setLang(
-            env.LANG ||
-            env.LANGUAGE ||
-            env.LC_ALL ||
-            env.LC_MESSAGES ||
-            this._defaultLang,
-        );
-      }
-    }
+class I18n {
+  constructor(options) {
+    const {
+      store = new DataManager(),
+      messages = null,
+      locale = null,
+      fallbackLocale = {
+        'default': 'en',
+        'de-ch': ['fr', 'it'],
+        'zh-hant': ['zh-hans'],
+        'es-cl': ['es-ar'],
+        'es': ['en'],
+        'pt': ['es-ar'],
+      },
+    } = options;
+    this.store = store;
+    this.setFallbackLocale(fallbackLocale);
+    if (locale) this.setLocale(locale);
+    if (messages) this.setMessages(messages);
   }
 
-  setDefaultLang(lang = 'en') {
-    this._defaultLang = lang.toLowerCase();
-    this._fallbackMessages = this.getMessages(this._defaultLang);
+  setFallbackLocale(fallbackLocales) {
+    this._fallbackLocale = toLowerMap(fallbackLocales);
   }
   /**
    * @memberof I18n
-   * @return {String} lang
-   * @description returns the current language. defaults to the browser's navigator.language value.
+   * @return {String} locale
+   * @description returns the current locale. defaults to the browser's navigator.locale value.
    * @example
    *
-   * navigator.language = 'en-US';
+   * navigator.locale = 'en-US';
    * import { I18n } from '@ornery/web-components';
    *
-   * console.log(I18n.getLang()) // "en-US"
+   * console.log(I18n.getLocale()) // "en-US"
    */
-  getLang() {
-    return DataManager.get('i18n-language') || '';
+  getLocale() {
+    return this.store.get('i18n-locale') || '';
   }
-  getRootLang(lang) {
-    return (lang || this.getLang()).split(this._altLangRegex)[0];
+
+  getFallbackLocale() {
+    const locale = this.getLocale();
+    const defaultLocale = this._fallbackLocale.default;
+    const fallbackMap = this._fallbackLocale[locale];
+    let fallbackLocale;
+    if (fallbackMap) {
+      const allMessages = this.store.get('i18n-messages') || {};
+      for (let i = 0; i < fallbackMap.length; i++) {
+        const fbl = fallbackMap[i];
+        if (allMessages[fbl]) {
+          fallbackLocale = fbl;
+          break;
+        }
+      }
+    }
+    return fallbackLocale || defaultLocale || 'en';
   }
   /**
    * @memberof I18n
-   * @param {String} lang
-   * @return {String} lang
-   * @description sets the current i18n language. This does not change the browser language.
+   * @param {String} locale
+   * @return {String} locale
+   * @description sets the current i18n locale. This does not change the browser locale.
    * @example
    *
    * import { I18n } from '@ornery/web-components';
    *
-   * I18n.setLang('en-US')
-   * console.log(I18n.getLang()) //'en-US'
+   * I18n.setLocale('en-US')
+   * console.log(I18n.getLocale()) //'en-US'
    */
-  setLang(lang = '') {
-    return DataManager.set('i18n-language', lang);
+  setLocale(locale = '') {
+    return this.store.set('i18n-locale', locale);
   }
   /**
    * @memberof I18n
-   * @param {String} lang
-   * @return {String} lang
+   * @param {String} locale
+   * @return {String} locale
    * @description returns the current i18n messages set in the DataManager
    */
-  getMessages(lang) {
-    const allMessages = DataManager.get('i18n-messages') || {};
-    if (lang === 'all') {
+  getMessages(locale = null) {
+    const allMessages = this.store.get('i18n-messages') || {};
+    if (locale === 'all') {
       return allMessages;
     } else {
-      lang = lang || this.getLang();
-      const rootLang = this.getRootLang(lang);
+      locale = locale || this.getLocale();
+      const fallbackLocale = this.getFallbackLocale();
       return {
-        ...this._fallbackMessages,
-        ...allMessages[rootLang],
-        ...allMessages[lang],
+        ...allMessages[fallbackLocale] || {},
+        ...allMessages[locale] || {},
       };
     }
   }
@@ -136,15 +144,14 @@ const I18n = new (class {
    * })
    */
   setMessages(values) {
-    const response = DataManager.set('i18n-messages', values);
-    this.setFallbackMessages();
+    const response = this.store.set('i18n-messages', values);
     return response;
   }
   /**
    * @memberof I18n
-   * @param {{String}|{Object}} lang
+   * @param {{String}|{Object}} locale
    * @param {Object} newStrings
-   * @description add more strings to the existing language set.
+   * @description add more strings to the existing locale set.
    *
    * @example
    *
@@ -154,39 +161,30 @@ const I18n = new (class {
    *   'tokenized.message': "I have a ${color} ${animal}"
    * });
    */
-  addMessages(lang, newStrings) {
-    if (typeof lang !== 'string') {
-      newStrings = lang;
-      lang = this.getLang();
+  addMessages(locale, newStrings) {
+    if (typeof locale !== 'string') {
+      newStrings = locale;
+      locale = this.getLocale();
     }
-    lang = lang.toLowerCase();
-    const rootLang = this.getRootLang(lang);
+    locale = locale.toLowerCase();
+    const fallbackLocale = this.getFallbackLocale();
     const existing = this.getMessages('all');
-    existing[lang] = {
-      ...(existing[lang] || {}),
+    existing[locale] = {
+      ...(existing[locale] || {}),
       ...newStrings,
     };
-    if (rootLang !== lang) {
-      existing[rootLang] = {
-        ...(existing[rootLang] || {}),
+    if (fallbackLocale !== locale) {
+      existing[fallbackLocale] = {
+        ...(existing[fallbackLocale] || {}),
         ...newStrings,
       };
     }
     this.setMessages(existing);
-    this.setFallbackMessages();
-  }
-
-  setFallbackMessages(){
-    const rootLang = this.getRootLang(this._defaultLang);
-    this._fallbackMessages = {
-      ...this.getMessages(this._defaultLang),
-      ...this.getMessages(rootLang)
-    };
   }
 
   /**
    * @memberof I18n
-   * @param {String} key they key of the string to retrieve from the current language set.
+   * @param {String} key they key of the string to retrieve from the current locale set.
    * @param {Object} data Optional, The data to process tokens in the string with.
    * @return {String} Returns the value for the key. Processed if a data context is provided as the second argument.
    * @description Returns the value for the key. If a context is provided as the second argument for tokens,
@@ -206,7 +204,6 @@ const I18n = new (class {
    */
   get(key, data = {}) {
     const context = {
-      ...this._fallbackMessages,
       ...this.getMessages(),
       ...data,
     };
@@ -217,7 +214,7 @@ const I18n = new (class {
    * @memberof I18n
    * @param {String} namespace
    * @param {String} context
-   * @return {Object} Returns all the messages for the given language. Filtered to namespace if provided.
+   * @return {Object} Returns all the messages for the given locale. Filtered to namespace if provided.
    * @description If a namespace is provided, returns all the key value pairs for that
    * namespace without the namespace in the keys.
    *
@@ -243,106 +240,12 @@ const I18n = new (class {
       return this.getMessages('all');
     }
   }
-})();
 
-/**
- * @class I18nMessage
- * @description <i18n-message> HTML element. Provides tranlsation and interpolation for
- * translatable strings
- * @param {String} key the key for the strings based on current language. can be set as the innerHTML or
- * defined as the attibutes: key, id, data-key, data-id
- * @param {JSON} values can be passed as data-* attributes or as a json-parseable object string as "data-values"
- * @param {String} dataAttributes
- * @example <caption>Given the following configuration</caption>
- * import { I18n } from '@ornery/web-components';
- * I18n.addMessages('en-US', {
- *  'translatable.message.name': "I'm a translated string from i18n",
- *   'tokenized.message': "I have a ${color} ${animal}"
- * });
- * @example @lang html <caption>With the following usage</caption>
- * <i18n-message>translatable.message.name</i18n-message>
- * <div>
- *    <i18n-message data-values="{'color: 'grey', 'animal': 'monkey'}">tokenized.message</i18n-message>
- *    <i18n-message data-color="grey" data-animal="monkey">tokenized.message</i18n-message>
- *    <i18n-message key="tokenized.message"/>
- *    <!-- React does not pass key or ref props so you can use "data-key" or "data-id" as well-->
- *    <i18n-message data-key="tokenized.message"/>
- *    <i18n-message id="translatable.message.name"/>
- *    <i18n-message data-id="translatable.message.name"/>
- * </div>
- *
- * @example @lang html <caption>Renders the HTML</caption>
- * <i18n-message>I'm a translated string from i18n</i18n-message>
- * <i18n-message>I have a grey monkey</i18n-message>
- */
-class I18nMessage extends HTMLElement {
-  constructor() {
-    super();
+  subscribe(callback) {
+    return this.store.subscribe(callback);
   }
-
-  static get observedAttributes() {
-    return ['key', 'id', 'data-values'];
-  }
-
-  get useShadow() {
-    if (this.hasAttribute('shadow')) {
-      const current = this.getAttribute('shadow');
-      if (current === 'false') {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  get translate() {
-    return this.getAttribute('key') || this.getAttribute('id');
-  }
-
-  attributeChangedCallback(name) {
-    this.update();
-  }
-
-  update() {
-    const root = this.shadowRoot || this;
-    const context = {...this.getAttribute('data-values'), ...this.dataset};
-    let newMesage = I18n.get(this.translate, context);
-    if (shouldEncode(newMesage)) {
-      newMesage = encodeHTML(newMesage);
-    }
-    if (!root.innerHTML) {
-      root.innerHTML = newMesage;
-    } else if (newMesage !== this.translate || newMesage !== root.innerHTML) {
-      root.innerHTML = newMesage;
-    }
-  }
-
-  connectedCallback() {
-    if (this.useShadow && !this.shadowRoot) this.attachShadow({mode: 'open'});
-    this._i18nListener = DataManager.subscribe((newVals) => {
-      this.update();
-    });
-    const attrObserver = new MutationObserver(() => this.update());
-    attrObserver.observe(this, {attributes: true, childList: this.useShadow});
-  }
-
-  disconnectedCallback() {
-    if (this._i18nListener) {
-      this._i18nListener.destroy();
-      this._i18nListener = null;
-    }
-  }
-}
-
-if (
-  typeof window !== 'undefined' &&
-  typeof customElements !== 'undefined' &&
-  !customElements.get('i18n-message')
-) {
-  window.I18n = I18n;
-  customElements.define('i18n-message', withContext(I18nMessage));
 }
 
 module.exports = {
   I18n,
-  I18nMessage,
 };

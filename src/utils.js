@@ -14,15 +14,15 @@
  *
  * result == 'bar';
  */
-const keyRegexp = /^[\w\-]+(\.[\w\-]+)+$/g
+const keyRegexp = /^[\w-]+(\.[\w-]+)+$/g;
 const getFromObj = (path, obj = {}) => {
   path = path && path.trim();
-  if (path != null){
+  if (path != null) {
     if (obj[path] != null) {
       return obj[path];
     } else if (keyRegexp.test(path)) {
       return path.split('.').reduce((res, key) => res[key] != null ? res[key] : path, obj);
-    } 
+    }
   }
   return path;
 };
@@ -44,9 +44,9 @@ const stripES6 = function(expr, context) {
   let result = expr.replace(thisRegex, '');
   let matchArr;
   while (matchArr = nestedES6.exec(result)) {
-      let [wholeMatch, outerMatch, key] = matchArr;
-      const replacement = getFromObj(key, context);
-      result = stripES6(result.replace(outerMatch, replacement).trim(), context);
+    const [, outerMatch, key] = matchArr;
+    const replacement = getFromObj(key, context);
+    result = stripES6(result.replace(outerMatch, replacement).trim(), context);
   }
   return result.replace(es6Regex, (match, $1)=> getFromObj($1, context));
 };
@@ -104,12 +104,12 @@ const template = stripES6;
 const arrayParser = (val, key, params) => {
   let current = params[key];
   if (current) {
-      if (!Array.isArray(current)) {
-          current = [current];
-      }
-      current.push(val);
+    if (!Array.isArray(current)) {
+      current = [current];
+    }
+    current.push(val);
   } else {
-      current = val;
+    current = val;
   }
   return current;
 };
@@ -144,12 +144,12 @@ const toParams = (str, options = {}) => {
   const queryString = parts[1] || '';
   const params = {};
   queryString.split('&').forEach((val) => {
-      const innerParts = val.split('=');
-      if (innerParts.length !== 2) return;
-      const paramKey = decodeURIComponent(innerParts[0]);
-      const paramVal = decodeURIComponent(innerParts[1]);
-      const parser = options[paramKey] || (() => paramVal);
-      params[paramKey] = arrayParser(parser(paramVal, paramKey, params), paramKey, params);
+    const innerParts = val.split('=');
+    if (innerParts.length !== 2) return;
+    const paramKey = decodeURIComponent(innerParts[0]);
+    const paramVal = decodeURIComponent(innerParts[1]);
+    const parser = options[paramKey] || (() => paramVal);
+    params[paramKey] = arrayParser(parser(paramVal, paramKey, params), paramKey, params);
   });
   return params;
 };
@@ -176,11 +176,11 @@ const toParams = (str, options = {}) => {
 const toSearch = (options) => {
   const filtered = Object.entries(options).filter((ent) => !!ent[1]);
   return encodeURI(`?${filtered.map((ent) => {
-      if (Array.isArray(ent[1])) {
-          return ent[1].map((val) => [ent[0], val].join('=')).join('&');
-      } else {
-          return ent.join('=');
-      }
+    if (Array.isArray(ent[1])) {
+      return ent[1].map((val) => [ent[0], val].join('=')).join('&');
+    } else {
+      return ent.join('=');
+    }
   }).join('&')}`);
 };
 
@@ -210,13 +210,13 @@ const toSearch = (options) => {
 const prefixKeys = (obj, prefix) => {
   let keys = [];
   if (Array.isArray(obj)) {
-      keys = obj.map((val, i) => i);
+    keys = obj.map((val, i) => i);
   } else {
-      keys = Object.keys(obj);
+    keys = Object.keys(obj);
   }
   return Object.assign(
       {},
-      ...keys.map((key) => ({[prefix + key]: obj[key]}))
+      ...keys.map((key) => ({[prefix + key]: obj[key]})),
   );
 };
 
@@ -257,16 +257,25 @@ const toDataAttrs = (obj) => {
   return prefixKeys(obj, 'data-');
 };
 const HTMLEncodable = /[\u00A0-\u9999<>]/g;
-const encodeHTML = (stringVal = "") => stringVal.replace(HTMLEncodable, i => `&#${i.charCodeAt(0)};`)
+const encodeHTML = (stringVal = '') => stringVal.replace(HTMLEncodable, (i) => `&#${i.charCodeAt(0)};`);
 
 const withClosing = /<([^>]+?)([^>]*?)>(.*?)<\/\1>/gi;
 const selfClosing = /(<([^>]+)\/>)/ig;
-const shouldEncode = (str) => {
-    return (str || '')
-        .replace(withClosing, '')
-        .replace(selfClosing, '')
-        .trim();
-}
+const shouldEncode = (str) => (str || '').replace(withClosing, '').replace(selfClosing, '').trim();
+
+const toLowerMap = (obj = {}) => {
+  if (Array.isArray(obj)) {
+    return obj.map(toLowerMap);
+  }
+  if (typeof obj === 'string') {
+    return obj.toLowerCase();
+  }
+  return Object.entries(obj).reduce((acc, [key, val]) => {
+    const lck = key.toLowerCase();
+    acc[lck] = toLowerMap(val);
+    return acc;
+  }, {});
+};
 
 module.exports = {
   getFromObj,
@@ -278,5 +287,6 @@ module.exports = {
   prefixKeys,
   toDataAttrs,
   shouldEncode,
-  encodeHTML
+  encodeHTML,
+  toLowerMap,
 };
