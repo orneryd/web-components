@@ -1,6 +1,6 @@
 {
   "name": "@ornery/web-components",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "WebComponents html loader and optional runtime mixins to enable creation of custom HTML elements using es6 template literal syntax in *.html files.",
   "type": "module",
   "main": "index.js",
