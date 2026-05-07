@@ -19,7 +19,7 @@ export default function setupConnect(nodeList, context) {
       ) {
         root = context.shadowRoot;
       } else {
-        root = document.createElement("div");
+        root = context;
       }
       root.innerHTML = "";
       nodeList.forEach((node) => root.appendChild(node));
