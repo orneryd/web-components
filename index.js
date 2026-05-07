@@ -1,17 +1,7 @@
-const ContextBinding = require('./src/context-binding');
-const DataManager = require('./src/data-manager');
-const EventMap = require('./src/event-map');
-const i18n = require('./src/i18n');
-const utils = require('./src/utils');
-const bindEvents = require('./src/bind-events');
-const setupConnect = require('./src/setup-connect');
-
-module.exports = {
-  ContextBinding,
-  DataManager,
-  EventMap,
-  bindEvents,
-  setupConnect,
-  ...i18n,
-  ...utils,
-};
+export { default as ContextBinding } from './src/context-binding.js';
+export { default as DataManager } from './src/data-manager.js';
+export { default as EventMap } from './src/event-map.js';
+export { I18n } from './src/i18n.js';
+export { default as bindEvents } from './src/bind-events.js';
+export { default as setupConnect } from './src/setup-connect.js';
+export * from './src/utils.js';

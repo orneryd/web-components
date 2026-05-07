@@ -1,2 +1,1 @@
-const HtmlLoader = require('./src/loaders/html-loader');
-module.exports = HtmlLoader;
+export { default } from './webpack.js';

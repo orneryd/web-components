@@ -1,13 +1,11 @@
-import ContextBinding from './context-binding';
-import DataManager from './data-manager';
-import EventMap from './event-map';
-import HTMLLoader from './loaders/html-loader';
-export * from './utils';
+import ContextBinding from './context-binding.js';
+import DataManager from './data-manager.js';
+import EventMap from './event-map.js';
+export * from './utils.js';
+export * from './i18n.js';
 
 export {
   ContextBinding,
   DataManager,
   EventMap,
 };
-
-export default HTMLLoader;

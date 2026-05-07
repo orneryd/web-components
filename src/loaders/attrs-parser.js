@@ -1,4 +1,4 @@
-const Parser = require('fastparse');
+import Parser from 'fastparse';
 
 const attrsParser = new Parser({
   outside: {
@@ -41,7 +41,7 @@ const attrsParser = new Parser({
   },
 });
 
-module.exports = (html, tagAttr) => {
+export default (html, tagAttr) => {
   return attrsParser.parse('outside', html, {
     currentTag: null,
     results: [],

@@ -2,7 +2,7 @@
  * @class EventMap
  * @description provides an event bus for when properties of the underlying Map change.
  */
-module.exports = class EventMap {
+export default class EventMap {
   constructor() {
     this._map = new Map();
     this._subscribers = {

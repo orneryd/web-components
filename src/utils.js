@@ -28,7 +28,7 @@ const getFromObj = (path, obj = {}) => {
 };
 
 
-const thisRegex = /^[this|props]\./gi;
+const thisRegex = /^(this|props)\./i;
 const nestedES6 = /\$\{.*(\$\{(.+?)\}).*\}/g;
 const es6Regex = /\$\{(.+?)\}/g;
 /**
@@ -45,10 +45,10 @@ const stripES6 = function(expr, context) {
   let matchArr;
   while (matchArr = nestedES6.exec(result)) {
     const [, outerMatch, key] = matchArr;
-    const replacement = getFromObj(key, context);
+    const replacement = getFromObj(key.replace(thisRegex, ''), context);
     result = stripES6(result.replace(outerMatch, replacement).trim(), context);
   }
-  return result.replace(es6Regex, (match, $1)=> getFromObj($1, context));
+  return result.replace(es6Regex, (match, $1) => getFromObj($1.replace(thisRegex, ''), context));
 };
 
 /**
@@ -277,7 +277,7 @@ const toLowerMap = (obj = {}) => {
   }, {});
 };
 
-module.exports = {
+export {
   getFromObj,
   template,
   stripES6,

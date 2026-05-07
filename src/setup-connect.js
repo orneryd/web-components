@@ -1,4 +1,4 @@
-module.exports = function (nodeList, context) {
+export default function setupConnect(nodeList, context) {
   nodeList.connect = function (root) {
     if (typeof HTMLElement !== "undefined") {
       if (!root && context instanceof HTMLElement) {

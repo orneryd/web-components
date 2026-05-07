@@ -1,4 +1,4 @@
-const {template} = require('./utils');
+import {template} from './utils.js';
 /**
  * @param {HTMLElement} root The root element to find all elements from.
  * @param {Object} context the context object for finding functions to bind against. default is the root element
@@ -96,4 +96,4 @@ const bindEvents = (root, context = root) => {
   return root;
 };
 
-module.exports = bindEvents;
+export default bindEvents;

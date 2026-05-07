@@ -1,5 +1,7 @@
-const HtmlLoader = require('./src/loaders/html-loader');
+import { transformHTML } from './src/loaders/html-loader.js';
 
-module.exports = {
-  process: (src) => HtmlLoader(src),
+export default {
+  processAsync: async (src, filename) => ({
+    code: await transformHTML(src, filename),
+  }),
 };

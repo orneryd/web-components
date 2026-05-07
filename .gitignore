@@ -127,3 +127,10 @@ captures/
 
 # XCode files
 xcuserdata/
+
+# Local scratch/todo files
+.todos
+.todos.md
+.todos/
+.claude
+tests/.compiled

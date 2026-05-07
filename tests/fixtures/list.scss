@@ -1,0 +1,12 @@
+$accent: #2563eb;
+$radius: 4px;
+
+.example-list {
+  list-style: none;
+  padding: 0;
+
+  &-item {
+    color: $accent;
+    border-radius: $radius;
+  }
+}

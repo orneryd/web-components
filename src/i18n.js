@@ -1,9 +1,8 @@
-const DataManager = require('./data-manager');
-const {template, getFromObj, toLowerMap} = require('./utils');
+import DataManager from './data-manager.js';
+import {template, getFromObj, toLowerMap} from './utils.js';
 
-if (typeof HTMLElement === 'undefined') {
-  // eslint-disable-next-line no-global-assign
-  HTMLElement = class {};
+if (typeof globalThis.HTMLElement === 'undefined') {
+  globalThis.HTMLElement = class {};
 }
 
 /**
@@ -246,6 +245,4 @@ class I18n {
   }
 }
 
-module.exports = {
-  I18n,
-};
+export { I18n };

@@ -1,4 +1,4 @@
-const EventMap = require('./event-map');
+import EventMap from './event-map.js';
 
 /**
    * @class DataStore
@@ -90,4 +90,4 @@ class DataManager {
   }
 }
 
-module.exports = DataManager;
+export default DataManager;

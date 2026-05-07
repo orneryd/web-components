@@ -1,0 +1,10 @@
+<link href="./list.scss" />
+<h3 id="list-title">${this.headerText}</h3>
+<p id="subtitle-props">${props.subtitle}</p>
+<p id="subtitle-bare">${subtitle}</p>
+<ul class="example-list">
+  ${this.items.map((item) => `<li class="example-list-item">${item}</li>`).join("")}
+</ul>
+<button id="add-this" onclick="${this.onAdd}">Add via this</button>
+<button id="add-props" onclick="${props.onAdd}">Add via props</button>
+<button id="add-bare" onclick="${onAdd}">Add via bare</button>

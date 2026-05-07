@@ -1,5 +1,5 @@
 
-module.exports = (superclass) =>
+export default (superclass) =>
 /**
  * @class ContextBinding
  * @param {class} superclass inheriting class

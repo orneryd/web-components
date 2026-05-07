@@ -1,31 +1,39 @@
 {
   "name": "@ornery/web-components",
-  "version": "2.0.0",
+  "version": "4.0.0",
   "description": "WebComponents html loader and optional runtime mixins to enable creation of custom HTML elements using es6 template literal syntax in *.html files.",
+  "type": "module",
   "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./templates": "./templates.js",
+    "./loader": "./loader.js",
+    "./vite": "./vite.js",
+    "./webpack": "./webpack.js",
+    "./rollup": "./rollup.js",
+    "./esbuild": "./esbuild.js",
+    "./rspack": "./rspack.js",
+    "./html.d.ts": "./html.d.ts"
+  },
+  "types": "./html.d.ts",
   "scripts": {
-    "docs": "jsdoc2md src/loaders/*.js src/*.js > README.md"
+    "docs": "jsdoc2md src/loaders/*.js src/*.js > README.md",
+    "test": "node --test tests/*.test.mjs"
   },
   "author": "timothyswt@gmail.com",
   "license": "MIT",
   "dependencies": {
-    "es6-templates": "^0.2.3",
-    "fastparse": "^1.1.1",
-    "html-minifier": "^3.5.8",
-    "html-webpack-plugin": "^3.2.0",
-    "loader-utils": "^1.1.0",
-    "node-sass": "^6.0.0",
-    "sass": "^1.34.0"
+    "fastparse": "^1.1.2",
+    "html-minifier-terser": "^7.2.0",
+    "sass": "^1.86.0",
+    "unplugin": "^3.0.0"
   },
   "devDependencies": {
-    "eslint": "^6.8.0",
-    "eslint-config-babel": "^9.0.0",
-    "eslint-config-google": "^0.13.0",
-    "eslint-plugin-jsdoc": "^15.8.0",
-    "jsdoc": "^3.6.3",
-    "jsdoc-to-markdown": "^5.0.0"
-  },
-  "peerDependencies": {
-    "node-sass": "^4.13.1"
+    "eslint": "^9.0.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-jsdoc": "^50.0.0",
+    "jsdoc": "^4.0.0",
+    "jsdoc-to-markdown": "^9.0.0",
+    "jsdom": "^29.1.1"
   }
 }
